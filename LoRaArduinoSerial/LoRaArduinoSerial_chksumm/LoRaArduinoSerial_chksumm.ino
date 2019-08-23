@@ -2,25 +2,13 @@
 // ESP32 BT communication 
 // Added checksum calculation for ZINOO protocol
 // Added $$ at the beginning of packet 
-
+// LED on 16 blink if valid data
 #include <string.h>
 #include <ctype.h>
 #include <SPI.h>
 #include <BluetoothSerial.h> 
 BluetoothSerial ESP_BT; //Object for Bluetooth
 
-/*---------------------------------------------------*\
-|                                                     |
-|               Arduino Rx - Bluetooth Tx             |
-|               Arduino Tx - Bluetooth Rx             |
-|               Arduino  8 - RFM DIO0                 |
-|               Arduino  9 - RFM DIO5                 |
-|               Arduino 10 - RFM NSS                  |
-|               Arduino 11 - RFM MOSI                 |
-|               Arduino 12 - RFM MISO                 |
-|               Arduino 13 - RFM CLK                  |
-|                                                     |
-\*---------------------------------------------------*/
 /*---------------------------------------------------*\
 |                                                     |
 |                                                     |
@@ -35,6 +23,8 @@ BluetoothSerial ESP_BT; //Object for Bluetooth
 
 
 // RFM98
+int data_LED = 16;
+bool led_status;
 int _slaveSelectPin = 5; 
 String content = "";
 char character;
@@ -206,7 +196,7 @@ void SetParametersFromLoRaMode(int LoRaMode)
 
 void setup()
 {
- 
+  pinMode(data_LED, OUTPUT);
 Serial.begin(57600); //   57600);
    ESP_BT.begin("ESP32_LoRa"); //Name of your Bluetooth Signal
   Serial.println("Bluetooth Device is Ready to Pair");
@@ -222,6 +212,8 @@ Serial.begin(57600); //   57600);
 
 void loop()
 {
+ led_status=LOW; 
+ digitalWrite (data_LED, led_status);
   CheckPC();
   
   CheckRx();
@@ -675,7 +667,10 @@ void CheckRx()
     }
     else
     {
+      led_status=HIGH;
+      digitalWrite (data_LED, led_status);
       ESP_BT.print("Message=$$");
+      
       //Serial.print("Hex=");
       CRC = 0xFFFF;
       for (i=5; i<Bytes; i++)
